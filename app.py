@@ -1,5 +1,6 @@
 import os
 import mysql.connector
+import sqlite3
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
@@ -99,19 +100,35 @@ def login():
         password = request.form["password"]
 
         db = get_db()
-        cursor = db.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+        
+        # SQLite compatible cursor
+        if os.environ.get('RENDER'):
+            cursor = db.cursor()
+            cursor.row_factory = sqlite3.Row
+        else:
+            cursor = db.cursor(dictionary=True)
+            
+        cursor.execute("SELECT * FROM users WHERE username=?", (username,))
         user = cursor.fetchone()
         cursor.close()
         db.close()
 
-        if user and check_password_hash(user["password_hash"], password):
-            session["user"] = user["username"]
-            flash("Login successful!", "success")
-            return redirect(url_for("dashboard"))
-        else:
-            flash("Invalid credentials", "danger")
-            return redirect(url_for("login"))
+        # SQLite compatible data access
+        if user:
+            if os.environ.get('RENDER'):
+                # SQLite: user[0]=id, user[1]=username, user[2]=password_hash
+                password_hash = user[2]
+            else:
+                # MySQL: user["password_hash"]
+                password_hash = user["password_hash"]
+            
+            if check_password_hash(password_hash, password):
+                session["user"] = username
+                flash("Login successful!", "success")
+                return redirect(url_for("dashboard"))
+
+        flash("Invalid credentials", "danger")
+        return redirect(url_for("login"))
 
     return render_template("login.html")
 
