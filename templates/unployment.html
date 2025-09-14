@@ -89,7 +89,7 @@
                 return;
             }
 
-            fetch("http://127.0.0.1:5000/analyze_state", {
+            fetch("/analyze_state", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ state_name: stateName })

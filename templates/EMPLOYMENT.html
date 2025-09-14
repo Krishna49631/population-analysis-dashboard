@@ -91,7 +91,7 @@
         return;
       }
 
-      fetch("http://127.0.0.1:5000/analyze_employment", {
+      fetch("/analyze_employment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ region_name: regionName })
