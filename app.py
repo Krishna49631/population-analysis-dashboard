@@ -151,13 +151,20 @@ def register():
         try:
             db = get_db()
             cursor = db.cursor()
-            cursor.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", 
-                          (username, password_hash))
+            
+            # SQLite compatible query
+            if os.environ.get('RENDER'):
+                cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", 
+                              (username, password_hash))
+            else:
+                cursor.execute("INSERT INTO users (username, password_hash) VALUES (%s, %s)", 
+                              (username, password_hash))
+                              
             db.commit()
             cursor.close()
             db.close()
-        except mysql.connector.IntegrityError:
-            flash("Username already exists", "danger")
+        except Exception as e:
+            flash(f"Registration error: {str(e)}", "danger")
             return redirect(url_for("register"))
 
         flash("Registration successful. Please login.", "success")
