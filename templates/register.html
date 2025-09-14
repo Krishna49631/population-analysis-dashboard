@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Population Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: url('https://t4.ftcdn.net/jpg/06/02/56/83/360_F_602568370_1J7AHYoSdaUthk704G8Mv8KOiGfZCH7I.jpg') no-repeat center center/cover;
+            position: relative;
+            flex-direction: column;
+        }
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .title {
+            position: relative;
+            z-index: 1;
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .register-container {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            width: 380px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+        .register-container h2 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            color: white;
+        }
+        .input-group {
+            position: relative;
+            margin: 15px 0;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .input-group input:focus {
+            border-color: #007bff;
+        }
+        .input-group i {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            cursor: pointer;
+        }
+        .register-container button {
+            background: #28a745;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .register-container button:hover {
+            background: #218838;
+        }
+        .login-link {
+            color: white;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .flash-messages {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .flash-message {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #28a745;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .warning {
+            background-color: #ffc107;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    <div class="title">Population Analysis</div>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="register-container">
+        <h2>Create Account</h2>
+        <form method="POST" action="/register">
+            <div class="input-group">
+                <input type="text" id="username" name="username" placeholder="Choose Username" required>
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password" name="password" placeholder="Enter Password" required>
+                <i class="fas fa-eye" onclick="togglePassword('password')"></i>
+            </div>
+            <div class="input-group">
+                <input type="password" id="password2" name="password2" placeholder="Confirm Password" required>
+                <i class="fas fa-eye" onclick="togglePassword('password2')"></i>
+            </div>
+            <button type="submit">Register</button>
+        </form>
+        
+        <div class="login-link">
+            Already have an account? <a href="/">Login here</a>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(fieldId) {
+            let passwordField = document.getElementById

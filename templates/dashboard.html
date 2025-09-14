@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            color: white;
+            overflow: hidden;
+        }
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            object-fit: cover;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        .welcome-text {
+            font-size: 18px;
+        }
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(32, 32, 32, 0.7);
+            padding: 100px;
+            border-radius: 180px;
+            display: inline-block;
+            margin-top: 100px;
+        }
+        h1 {
+            margin-bottom: 30px;
+            font-size: 32px;
+        }
+        .option {
+            display: block;
+            margin: 15px;
+            padding: 15px 30px;
+            background: rgba(75, 134, 236, 0.393);
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            border-radius: 25px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .option:hover {
+            background: rgb(254, 128, 1);
+            transform: translateY(-2px);
+            border-color: white;
+        }
+        .flash-messages {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .flash-message {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+        }
+        .success {
+            background-color: #28a745;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .warning {
+            background-color: #ffc107;
+            color: black;
+        }
+        .info {
+            background-color: #17a2b8;
+        }
+    </style>  
+</head>
+<body>
+    <video autoplay muted loop class="video-background">
+        <source src="{{ url_for('static', filename='WhatsApp Video 2025-03-06 at 23.03.39_f9c4087f.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Header with welcome and logout -->
+    <div class="header">
+        <div class="welcome-text">Welcome, {{ user }}!</div>
+        <a href="/logout" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <center>
+        <div class="container">
+            <h1>Welcome to Analysis Dashboard</h1>
+            <a href="/comparison" class="option">STATE COMPARISON</a>
+            <a href="/unemployment" class="option">UNEMPLOYMENT ANALYSIS</a>
+            <a href="/literacy" class="option">LITERACY RATE ANALYSIS</a>
+            <a href="/employment" class="option">EMPLOYMENT ANALYSIS</a>
+             <a href="/feedback" class="option" style="background: rgba(102, 126, 234, 0.6);">💬 GIVE FEEDBACK</a>
+        </div>
+    </center>
+
+    <script>
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.querySelectorAll('.flash-message');
+            flashMessages.forEach(message => {
+                message.style.display = 'none';
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
