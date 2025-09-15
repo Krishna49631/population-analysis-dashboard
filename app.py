@@ -13,6 +13,8 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")  # Default "admin" agar nahi mile to
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -494,6 +496,10 @@ def feedback():
         flash("Please login first to submit feedback", "warning")
         return redirect(url_for("login"))
     
+    if session["user"] != ADMIN_USERNAME:
+        flash("⛔ Access denied. Admin only feature.", "danger")
+        return redirect(url_for("dashboard"))
+    
     if request.method == "POST":
         email = request.form.get("email", "")
         message = request.form.get("message", "")
@@ -506,10 +512,19 @@ def feedback():
         try:
             db = get_db()
             cursor = db.cursor()
-            cursor.execute(
-                "INSERT INTO feedback (username, email, message, rating) VALUES (%s, %s, %s, %s)",
-                (session["user"], email, message, rating)
-            )
+            
+            # SQLite compatible query
+            if os.environ.get('RENDER'):
+                cursor.execute(
+                    "INSERT INTO feedback (username, email, message, rating) VALUES (?, ?, ?, ?)",
+                    (session["user"], email, message, rating)
+                )
+            else:
+                cursor.execute(
+                    "INSERT INTO feedback (username, email, message, rating) VALUES (%s, %s, %s, %s)",
+                    (session["user"], email, message, rating)
+                )
+                
             db.commit()
             cursor.close()
             db.close()
@@ -529,17 +544,38 @@ def feedback():
 @app.route("/view_feedback")
 def view_feedback():
     if "user" not in session:
+        flash("Please login first", "warning")
         return redirect(url_for("login"))
     
-    # Optional: Admin ke liye sab feedback dikhayein
-    db = get_db()
-    cursor = db.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM feedback ORDER BY created_at DESC")
-    feedback_list = cursor.fetchall()
-    cursor.close()
-    db.close()
+    if session["user"] != ADMIN_USERNAME:
+        flash("⛔ Access denied. Admin only feature.", "danger")
+        return redirect(url_for("dashboard"))
     
-    return render_template("view_feedback.html", feedback=feedback_list, user=session["user"])
+    try:
+        db = get_db()
+        
+        # SQLite compatible cursor
+        if os.environ.get('RENDER'):
+            cursor = db.cursor()
+            cursor.row_factory = sqlite3.Row  # ← Yahaan fix karein
+        else:
+            cursor = db.cursor(dictionary=True)
+            
+        cursor.execute("SELECT * FROM feedback ORDER BY created_at DESC")
+        feedback_list = cursor.fetchall()
+        cursor.close()
+        db.close()
+        
+        # SQLite Row objects to dictionaries convert karein
+        if os.environ.get('RENDER'):
+            feedback_list = [dict(row) for row in feedback_list]
+        
+        return render_template("view_feedback.html", 
+                             feedback=feedback_list, 
+                             user=session["user"])
+    except Exception as e:
+        flash(f"Error loading feedback: {str(e)}", "danger")
+        return redirect(url_for("dashboard"))
 
 # -------------------------------
 # Finally, run the app

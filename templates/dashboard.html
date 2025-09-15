@@ -143,6 +143,15 @@
             <a href="/literacy" class="option">LITERACY RATE ANALYSIS</a>
             <a href="/employment" class="option">EMPLOYMENT ANALYSIS</a>
              <a href="/feedback" class="option" style="background: rgba(102, 126, 234, 0.6);">💬 GIVE FEEDBACK</a>
+             <!-- 🔒 Sirf admin ke liye feedback options -->
+    {% if user == "Krishna49631" %}
+    <a href="/feedback" class="option" style="background: rgba(102, 126, 234, 0.6);">
+        💬 GIVE FEEDBACK
+    </a>
+    <a href="/view_feedback" class="option" style="background: rgba(86, 192, 86, 0.6);">
+        📋 VIEW FEEDBACK
+    </a>
+    {% endif %}
         </div>
     </center>
 
