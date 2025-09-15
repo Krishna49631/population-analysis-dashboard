@@ -1,6 +1,7 @@
 import os
 import mysql.connector
 import sqlite3
+import traceback
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
@@ -12,6 +13,7 @@ from flask import Flask, render_template, request, jsonify, url_for, session, fl
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")  # Default "admin" agar nahi mile to
 
@@ -418,82 +420,44 @@ def analyze_state():
 # ---- F) Another Example Route for 4-plot Employment Analysis
 @app.route('/analyze_employment', methods=['POST'])
 def analyze_employment():
-    """
-    4-subplot route for region-based analysis:
-      - line chart (Year vs Employed)
-      - histogram (Employed distribution)
-      - box plot (Employed variability)
-      - scatter plot (Employed changes by index)
-    """
     try:
         data = request.json
         region_name = data.get("region_name", "").strip()
         if not region_name:
             return jsonify({"error": "Please provide a region name"}), 400
 
-        if "Region" not in df.columns:
-            return jsonify({"error": "⚠ 'Region' column not found in the dataset!"}), 400
+        # Debug: Check available columns
+        print("Available columns:", df.columns.tolist())
+        
+        # Find region-like columns
+        region_columns = [col for col in df.columns if 'region' in col.lower() or 'state' in col.lower() or 'area' in col.lower()]
+        
+        if not region_columns:
+            return jsonify({"error": "No region/state columns found in dataset. Available columns: " + str(df.columns.tolist())}), 400
 
-        state_data = df[df["Region"].str.lower() == region_name.lower()]
+        # Use first available region column
+        region_col = region_columns[0]
+        state_data = df[df[region_col].astype(str).str.lower() == region_name.lower()]
+        
         if state_data.empty:
+            available_regions = df[region_col].astype(str).unique().tolist()
             return jsonify({
-                "error": f"⚠ No data found for: {region_name}. Available regions: {df['Region'].unique().tolist()}"
+                "error": f"No data found for: {region_name}. Available {region_col}s: {available_regions}"
             }), 404
 
-        # Find the 'Estimated Employed' column
-        estimated_employed_col = None
-        for col in df.columns:
-            if "employed" in col.lower():
-                estimated_employed_col = col
-                break
-        if not estimated_employed_col:
-            return jsonify({"error": "⚠ No column found related to 'Estimated Employed'."}), 400
+        # Find employment-related column
+        employed_cols = [col for col in df.columns if 'employed' in col.lower() or 'employment' in col.lower()]
+        if not employed_cols:
+            return jsonify({"error": "No employment-related columns found. Available columns: " + str(df.columns.tolist())}), 400
+        
+        employed_col = employed_cols[0]
 
-        sns.set_style("darkgrid")
-        fig, axes = plt.subplots(2, 2, figsize=(15, 10))
-
-        # 1) line chart (Year vs Employed)
-        if "Year" in state_data.columns:
-            sns.lineplot(
-                x="Year",
-                y=estimated_employed_col,
-                data=state_data,
-                marker="o",
-                ax=axes[0, 0]
-            )
-            axes[0, 0].set_title(f"Employment Trends in {region_name}")
-            axes[0, 0].set_xlabel("Year")
-            axes[0, 0].set_ylabel("Estimated Employed")
-        else:
-            axes[0, 0].set_visible(False)
-
-        # 2) histogram
-        sns.histplot(
-            state_data[estimated_employed_col],
-            bins=10, kde=True, ax=axes[0, 1]
-        )
-        axes[0, 1].set_title(f"Employment Distribution in {region_name}")
-        axes[0, 1].set_xlabel("Estimated Employed")
-        axes[0, 1].set_ylabel("Frequency")
-
-        # 3) box plot
-        sns.boxplot(y=state_data[estimated_employed_col], ax=axes[1, 0])
-        axes[1, 0].set_title(f"Employment Variability in {region_name}")
-        axes[1, 0].set_ylabel("Estimated Employed")
-
-        # 4) scatter plot
-        sns.scatterplot(
-            x=state_data.index,
-            y=state_data[estimated_employed_col],
-            data=state_data,
-            ax=axes[1, 1],
-            color="red"
-        )
-        axes[1, 1].set_title(f"Employment Changes in {region_name}")
-        axes[1, 1].set_xlabel("Index")
-        axes[1, 1].set_ylabel("Estimated Employed")
-
-        plt.tight_layout()
+        # Create simple plot instead of 4-subplot
+        plt.figure(figsize=(10, 6))
+        sns.histplot(state_data[employed_col], bins=10, kde=True)
+        plt.title(f"Employment Distribution in {region_name}")
+        plt.xlabel(employed_col)
+        plt.ylabel("Frequency")
 
         # Convert the figure to base64
         img = io.BytesIO()
@@ -505,10 +469,12 @@ def analyze_employment():
         return jsonify({
             "message": "Success",
             "region": region_name,
-            "graph": f"data:image/png;base64,{graph_b64}"
+            "graph": f"data:image/png;base64,{graph_b64}",
+            "used_column": employed_col
         })
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e), "traceback": str(traceback.format_exc())}), 500
     
 # -------------------------------
 # Feedback Routes
